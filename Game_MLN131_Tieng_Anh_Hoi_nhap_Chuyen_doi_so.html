@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vượt Chướng Ngại Vật</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0b132b;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Thanh điều hướng Tab */
+        .tab-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background-color: #1c2541;
+            color: #5bc0be;
+            border: 2px solid #3a506b;
+            padding: 10px 25px;
+            font-size: 18px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background-color: #3a506b;
+        }
+
+        .tab-btn.active {
+            background-color: #5bc0be;
+            color: #0b132b;
+            border-color: #5bc0be;
+        }
+
+        .game-board {
+            display: flex;
+            gap: 20px;
+            background: linear-gradient(180deg, #1c2541 0%, #0b132b 100%);
+            border: 3px solid #3a506b;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(91, 192, 190, 0.3);
+            width: 900px;
+            max-width: 100%;
+        }
+
+        /* Phần hình ảnh bên trái */
+        .left-panel {
+            position: relative;
+            width: 400px;
+            height: 350px;
+            background-color: #000;
+            border: 2px solid #5bc0be;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .left-panel img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Bố cục lưới cho 5 mảnh ghép */
+        .tiles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: 1fr 1fr;
+        }
+
+        #tile-1,
+        #tile-2,
+        #tile-3 {
+            grid-column: span 2;
+        }
+
+        #tile-4,
+        #tile-5 {
+            grid-column: span 3;
+        }
+
+        .tile {
+            background-color: #1c2541;
+            border: 1px solid #3a506b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.5s ease, background-color 0.3s;
+        }
+
+        .tile:hover {
+            background-color: #3a506b;
+        }
+
+        .tile.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Phần ô chữ bên phải */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .header-cnv {
+            background-color: #5bc0be;
+            color: #0b132b;
+            text-align: center;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #rows-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(58, 80, 107, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .row.active {
+            background-color: rgba(91, 192, 190, 0.5);
+            border: 1px solid #5bc0be;
+        }
+
+        .letters {
+            display: flex;
+            gap: 5px;
+        }
+
+        .circle {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #1e90ff, #00bfff);
+            border: 2px solid white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 18px;
+            text-transform: uppercase;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            color: transparent;
+        }
+
+        .row.solved .circle {
+            color: white;
+        }
+
+        .row-number {
+            background-color: #3a506b;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        /* Phần điều khiển */
+        .controls {
+            margin-top: 20px;
+            width: 900px;
+            max-width: 100%;
+            background-color: #1c2541;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #question-text {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #5bc0be;
+            min-height: 25px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            width: 300px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #5bc0be;
+            color: #0b132b;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #6fffe9;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>VƯỢT CHƯỚNG NGẠI VẬT: TIẾNG ANH, HỘI NHẬP VÀ CHUYỂN ĐỔI SỐ</h2>
+
+    <div class="tab-bar">
+        <button class="tab-btn active" id="btn-tab-1" onclick="loadTab(1)">Chủ đề 1</button>
+        <button class="tab-btn" id="btn-tab-2" onclick="loadTab(2)">Chủ đề 2</button>
+        <button class="tab-btn" id="btn-tab-3" onclick="loadTab(3)">Chủ đề 3</button>
+    </div>
+
+    <div class="game-board">
+        <div class="left-panel">
+            <img id="secret-image" src="" alt="Hình ảnh bí mật">
+            <div class="tiles">
+                <div class="tile" id="tile-1" onclick="selectRow(1)">1</div>
+                <div class="tile" id="tile-2" onclick="selectRow(2)">2</div>
+                <div class="tile" id="tile-3" onclick="selectRow(3)">3</div>
+                <div class="tile" id="tile-4" onclick="selectRow(4)">4</div>
+                <div class="tile" id="tile-5" onclick="selectRow(5)">5</div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="header-cnv" id="header-cnv">CHƯỚNG NGẠI VẬT CÓ ? CHỮ CÁI</div>
+            <div id="rows-container"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div id="question-text">Vui lòng bấm vào một mảnh ghép (1-5) trên hình để xem câu hỏi.</div>
+
+        <div class="control-group">
+            <input type="text" id="answer-input" placeholder="Nhập câu trả lời hàng ngang...">
+            <button onclick="checkRowAnswer()">Trả lời hàng ngang</button>
+        </div>
+
+        <hr style="border-color: #3a506b; margin: 20px 0;">
+
+        <div class="control-group">
+            <input type="text" id="cnv-input" placeholder="Nhập Chướng ngại vật...">
+            <button onclick="checkCNV()" style="background-color: #ff9f1c;">Đoán Chướng Ngại Vật</button>
+        </div>
+    </div>
+
+    <script>
+        const allTabsData = {
+            1: {
+                title: "",
+                image: "https://special.nhandan.vn/thu-tuong-pham-minh-chinh-du-sco-trung-quoc/assets/ZbqVpWy8lc/cover2-1080x1257.jpg",
+                cnv: "HOINHAP",
+                rows: {
+                    1: { question: "Ngoài cạnh tranh, các quốc gia trên thế giới ngày nay còn đề cao tinh thần gì để cùng tồn tại và phát triển bền vững?", answer: "HOPTAC" },
+                    2: { question: "Xu thế tất yếu của thế giới hiện nay, nơi các nền kinh tế và văn hóa ngày càng gắn kết, xóa nhòa ranh giới là gì?", answer: "TOANCAUHOA" },
+                    3: { question: "Đây là ngôn ngữ chính thức của hơn 50 quốc gia và được coi là 'ngôn ngữ toàn cầu' trong thế kỷ 21.", answer: "TIENGANH" },
+                    4: { question: "Để xuất cảnh ra nước ngoài hợp pháp, ngoài Visa, công dân bắt buộc phải mang theo loại giấy tờ tùy thân nào?", answer: "HOCHIEU" },
+                    5: { question: "Từ trái nghĩa với 'Thách thức', thường được đặt song hành khi đánh giá về tác động của quá trình hội nhập là gì?", answer: "COHOI" }
+                }
+            },
+            2: {
+                title: "",
+                image: "https://media.vneconomy.vn/images/upload/2025/02/05/960x0-3.jpg",
+                cnv: "CONGNGHE",
+                rows: {
+                    1: { question: "Tài sản vô hình được tạo ra từ mọi hoạt động trên internet, thường được ví là 'nguồn dầu mỏ mới' của kỷ nguyên số là gì?", answer: "DULIEU" },
+                    2: { question: "Các từ khóa lệnh (keyword) trong các ngôn ngữ lập trình phổ biến nhất hiện nay đều được viết bằng ngôn ngữ nào?", answer: "TIENGANH" },
+                    3: { question: "Nền tảng lưu trữ mã nguồn mở lớn nhất thế giới, thường được ví như 'mạng xã hội của các lập trình viên' có tên là gì?", answer: "GITHUB" },
+                    4: { question: "Để phòng tránh rủi ro đánh cắp dữ liệu hay bị tấn công mạng, vấn đề an toàn và ... thông tin luôn phải được ưu tiên hàng đầu.", answer: "BAOMAT" },
+                    5: { question: "Để không bị các hệ thống trí tuệ nhân tạo (AI) thay thế, con người cần phát huy tối đa năng lực tư duy và khả năng gì trong công việc?", answer: "SANGTAO" }
+                }
+            },
+            3: {
+                title: "",
+                image: "https://res.cloudinary.com/dff989w82/image/upload/v1781024645/hdong_mskh6q.jpg",
+                cnv: "HANHDONG",
+                rows: {
+                    1: { question: "Bên cạnh kiến thức chuyên ngành môn học, sinh viên cần tích lũy thêm yếu tố gì (như làm việc nhóm, quản lý thời gian) để chinh phục nhà tuyển dụng?", answer: "KYNANG" },
+                    2: { question: "Thái độ quan trọng nhất của người học khi tiếp cận một công nghệ hoặc tri thức mới, trái ngược với việc chỉ ngồi chờ hướng dẫn là gì?", answer: "CHUDONG" },
+                    3: { question: "Loại tư duy giúp người trẻ không tiếp nhận thông tin một chiều mà luôn biết phân tích, đặt câu hỏi và đánh giá vấn đề là tư duy gì?", answer: "PHANBIEN" },
+                    4: { question: "Đây là khả năng chủ động tìm tòi, trau dồi kiến thức mà không cần ai nhắc nhở, được coi là kỹ năng cốt lõi để học tập suốt đời.", answer: "TUHOC" },
+                    5: { question: "Việc trang bị ngoại ngữ và kỹ năng số là chìa khóa để thanh niên tự tin bước vào quá trình ... quốc tế sâu rộng.", answer: "HOINHAP" }
+                }
+            }
+        };
+
+        let currentTab = 1;
+        let activeRow = null;
+
+        function removeAccents(str) {
+            return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/\s/g, '').toUpperCase();
+        }
+
+        function loadTab(tabId) {
+            currentTab = tabId;
+            activeRow = null;
+            const data = allTabsData[tabId];
+
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById('btn-tab-' + i).classList.remove('active');
+                document.getElementById('btn-tab-' + i).innerText = "Chủ đề " + i + ": " + allTabsData[i].title;
+            }
+            document.getElementById('btn-tab-' + tabId).classList.add('active');
+
+            document.getElementById('secret-image').src = data.image;
+            document.getElementById('header-cnv').innerText = `CHƯỚNG NGẠI VẬT CÓ ${data.cnv.length} CHỮ CÁI`;
+
+            const rowsContainer = document.getElementById('rows-container');
+            rowsContainer.innerHTML = '';
+
+            for (let i = 1; i <= 5; i++) {
+                let answerText = data.rows[i].answer;
+                let circlesHTML = '';
+                for (let char of answerText) {
+                    circlesHTML += `<div class="circle">${char}</div>`;
+                }
+
+                rowsContainer.innerHTML += `
+                    <div class="row" id="row-${i}">
+                        <div class="letters" id="letters-${i}">
+                            ${circlesHTML}
+                        </div>
+                        <div class="row-number">${i}</div>
+                    </div>
+                `;
+            }
+
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById('tile-' + i).classList.remove('hidden');
+            }
+
+            document.getElementById('question-text').innerText = "Vui lòng bấm vào một mảnh ghép (1-5) trên hình để xem câu hỏi.";
+            document.getElementById('question-text').style.color = "#5bc0be";
+            document.getElementById('question-text').style.fontSize = "18px";
+            document.getElementById('answer-input').value = "";
+            document.getElementById('cnv-input').value = "";
+        }
+
+        function selectRow(id) {
+            activeRow = id;
+
+            for (let i = 1; i <= 5; i++) {
+                let rowEl = document.getElementById('row-' + i);
+                if (rowEl) rowEl.classList.remove('active');
+            }
+
+            document.getElementById('row-' + id).classList.add('active');
+
+            let questionStr = allTabsData[currentTab].rows[id].question;
+            document.getElementById('question-text').innerText = "Hàng " + id + ": " + questionStr;
+            document.getElementById('answer-input').value = "";
+            document.getElementById('answer-input').focus();
+        }
+
+        function checkRowAnswer() {
+            if (!activeRow) {
+                // Thay thế cảnh báo mặc định bằng SweetAlert
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Khoan đã...',
+                    text: 'Vui lòng bấm vào một mảnh ghép để chọn hàng ngang trước!',
+                    confirmButtonColor: '#5bc0be',
+                    background: '#1c2541',
+                    color: '#fff'
+                });
+                return;
+            }
+
+            let userAnswer = removeAccents(document.getElementById('answer-input').value);
+            let correctAnswer = removeAccents(allTabsData[currentTab].rows[activeRow].answer);
+
+            if (userAnswer === correctAnswer) {
+                document.getElementById('row-' + activeRow).classList.add('solved');
+                document.getElementById('tile-' + activeRow).classList.add('hidden');
+                document.getElementById('answer-input').value = "";
+                document.getElementById('question-text').innerText = "Chính xác! Mời bấm vào mảnh ghép tiếp theo hoặc đoán chướng ngại vật.";
+            } else {
+                // Báo sai bằng SweetAlert
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Ôi không!',
+                    text: 'Câu trả lời chưa chính xác. Vui lòng thử lại!',
+                    confirmButtonColor: '#5bc0be',
+                    background: '#1c2541',
+                    color: '#fff'
+                });
+            }
+        }
+
+        function checkCNV() {
+            let userAnswer = removeAccents(document.getElementById('cnv-input').value);
+            let correctCNV = removeAccents(allTabsData[currentTab].cnv);
+
+            if (userAnswer === correctCNV) {
+                for (let i = 1; i <= 5; i++) {
+                    document.getElementById('row-' + i).classList.add('solved');
+                    document.getElementById('tile-' + i).classList.add('hidden');
+                }
+
+                let finalWord = allTabsData[currentTab].cnv;
+
+                document.getElementById('question-text').innerText = "🎉 XUẤT SẮC! BẠN ĐÃ TÌM RA CHƯỚNG NGẠI VẬT LÀ '" + finalWord + "' 🎉";
+                document.getElementById('question-text').style.color = "#ff9f1c";
+                document.getElementById('question-text').style.fontSize = "22px";
+                document.getElementById('question-text').style.fontWeight = "bold";
+
+                // Thêm một hiệu ứng SweetAlert nhỏ chúc mừng
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Tuyệt vời!',
+                    text: 'Bạn đã giải mã thành công Chướng Ngại Vật!',
+                    confirmButtonColor: '#ff9f1c',
+                    background: '#1c2541',
+                    color: '#fff'
+                });
+            } else {
+                // Báo sai chướng ngại vật bằng SweetAlert
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Chưa đúng rồi!',
+                    text: 'Rất tiếc, đây chưa phải là Chướng ngại vật!',
+                    confirmButtonColor: '#ff9f1c',
+                    background: '#1c2541',
+                    color: '#fff'
+                });
+            }
+        }
+
+        window.onload = function () {
+            loadTab(1);
+        };
+    </script>
+</body>
+
+</html>
